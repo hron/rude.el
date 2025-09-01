@@ -4,6 +4,8 @@
     (defun rude-full-reload ()
       "Reload `rude' package."
       (interactive)
+      (rude-mode -1)
+
       (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
       (push dir load-path))
 
@@ -18,14 +20,13 @@
               (unload-feature feat t)))
           (load-file file)))
 
-      (global-set-key (kbd "M-t") #'rude-compile-thing-at-point)
-      (global-set-key (kbd "M-C-t") #'rude-dape-thing-at-point))
+      (rude-mode +1))
 
     (rude-full-reload)
   #+end_src
 
 #+RESULTS:
-: rude-dape-thing-at-point
+: t
 
 * Future emacs-lisp-mode future history maybe:
 

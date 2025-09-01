@@ -36,22 +36,22 @@ If DEBUG is t then return dape-config."
 DEBUG has no meaning."
   (error "Needed external file doesn't exist"))
 
-(ert-deftest compile-command-for-major-mode ()
+(ert-deftest compile-future-history-for-major-mode ()
   (with-temp-buffer
     (let ((rude-providers-alist
            '((c-mode . (sample-provider-1 sample-provider-2))
              (text-mode . (dont-match-provider)))))
       (c-mode)
-      (should (equal (rude-compile-command) "Sample #1")))))
+      (should (equal (rude--build-future-history) '("Sample #1" "Sample #2"))))))
 
-(ert-deftest compile-command-rescue-errors ()
+(ert-deftest compile-future-history-rescue-errors ()
   (with-temp-buffer
     (let ((compile-command nil)
           (debug-on-error nil)
           (rude-providers-alist
            '((text-mode . (error-provider)))))
       (text-mode)
-      (should (equal (rude-compile-command) '())))))
+      (should (equal (rude--build-future-history) '())))))
 
 (ert-deftest dape-command-for-major-mode ()
   (with-temp-buffer

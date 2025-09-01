@@ -49,6 +49,12 @@
   :group 'compilation
   :prefix "rude-")
 
+(defcustom rude-replace-compile-command nil
+  "Replace `compile-command' with first entry of future history."
+  :type 'boolean
+  :group 'rude
+  :tag "Replace compile-command")
+
 (defun rude--providers-for-current-buffer ()
   "Return list of providers for the current buffer."
   (alist-get major-mode rude-providers-alist))
@@ -73,13 +79,39 @@ if DEBUG is set to t return `dape-command' instead."
       (project-root (project-current nil))
     default-directory))
 
+(defun rude--build-future-history ()
+  "Return a list of commands that is used as future history for `compile'."
+  (let ((provider-funcs
+         (reverse (rude--providers-for-current-buffer)))
+        (result '()))
+    (dolist (func provider-funcs)
+      (with-demoted-errors "Error in a provider func: %S"
+        (push (funcall func) result)))
+    (seq-map #'substring-no-properties (flatten-list result))))
+
+(defun rude--read-command (command)
+  "Copy of `compile-read-command', except provides future history.
+Also it uses the first future history entry as default if the passed
+COMMAND is nil."
+  (let* ((future-history (rude--build-future-history))
+         (initial-content (if rude-replace-compile-command
+                              (car future-history)
+                            command))
+         (future-history (if rude-replace-compile-command
+                             (cdr future-history)
+                           future-history)))
+    (read-shell-command "Compile command: "
+                        initial-content
+                        'compile-history
+                        future-history)))
+
 ;;;###autoload
-(defun rude-compile-thing-at-point ()
-  "Call `compile' to run thing at point (test, main function etc)."
-  (interactive)
-  (let ((default-directory (rude-default-directory)))
-    (setq compile-command (rude-compile-command))
-    (call-interactively #'compile)))
+(define-minor-mode rude-mode
+  "Extends `compile' and `dape' commands with future history based on the context."
+  :global t :lighter nil
+  (advice-remove 'compilation-read-command #'rude--read-command)
+  (when rude-mode
+    (advice-add 'compilation-read-command :override #'rude--read-command)))
 
 ;;;###autoload
 (defun rude-dape-thing-at-point ()
