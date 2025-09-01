@@ -105,22 +105,22 @@ COMMAND is nil."
                         'compile-history
                         future-history)))
 
+(defun rude--dape-read-config (orig-func)
+  "Advice `dape--read-config' (ORIG-FUNC) to run thing at point."
+  (let* ((default-directory (rude-default-directory))
+         (dape-command (or dape-command (rude-compile-command t))))
+    (ignore dape-command)
+    (funcall orig-func)))
+
 ;;;###autoload
 (define-minor-mode rude-mode
   "Extends `compile' and `dape' commands with future history based on the context."
   :global t :lighter nil
   (advice-remove 'compilation-read-command #'rude--read-command)
+  (advice-remove 'dape--read-config #'rude--dape-read-config)
   (when rude-mode
-    (advice-add 'compilation-read-command :override #'rude--read-command)))
-
-;;;###autoload
-(defun rude-dape-thing-at-point ()
-  "Call `dape' to run thing at point (test, main function etc)."
-  (interactive)
-  (let* ((default-directory (rude-default-directory))
-         (dape-command (rude-compile-command t)))
-    (ignore dape-command)
-    (call-interactively #'dape)))
+    (advice-add 'compilation-read-command :override #'rude--read-command)
+    (advice-add 'dape--read-config :around #'rude--dape-read-config)))
 
 (provide 'rude)
 ;;; rude.el ends here
