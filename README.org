@@ -8,7 +8,7 @@
      (rude-mode -1))
 
    (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
-   (push dir load-path))
+     (push dir load-path))
 
    (when-let* ((buff (get-buffer "*Customize Group: Compile Plus*")))
      (kill-buffer buff))
@@ -26,6 +26,10 @@
  (rude-full-reload)
   #+end_src
 
+#+begin_src emacs-lisp
+  (require 'rude)
+  (rude-mode +1)
+#+end_src
 #+RESULTS:
 : t
 
