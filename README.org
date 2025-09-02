@@ -1,28 +1,29 @@
 * How to reload the package in active Emacs session for testing
 
   #+begin_src emacs-lisp
-    (defun rude-full-reload ()
-      "Reload `rude' package."
-      (interactive)
-      (rude-mode -1)
+ (defun rude-full-reload ()
+   "Reload `rude' package."
+   (interactive)
+   (when (boundp 'rude-mode)
+     (rude-mode -1))
 
-      (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
-      (push dir load-path))
+   (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
+   (push dir load-path))
 
-      (when-let* ((buff (get-buffer "*Customize Group: Compile Plus*")))
-        (kill-buffer buff))
+   (when-let* ((buff (get-buffer "*Customize Group: Compile Plus*")))
+     (kill-buffer buff))
 
-      (let ((all-files (append (directory-files default-directory nil "\\.el$")
-                               '("test/rude-test-helpers.el"))))
-        (dolist (file all-files)
-          (let ((feat (intern (file-name-base file))))
-            (when (featurep feat)
-              (unload-feature feat t)))
-          (load-file file)))
+   (let ((all-files (append (directory-files default-directory nil "\\.el$")
+                            '("test/rude-test-helpers.el"))))
+     (dolist (file all-files)
+       (let ((feat (intern (file-name-base file))))
+         (when (featurep feat)
+           (unload-feature feat t)))
+       (load-file file)))
 
-      (rude-mode +1))
+   (rude-mode +1))
 
-    (rude-full-reload)
+ (rude-full-reload)
   #+end_src
 
 #+RESULTS:
