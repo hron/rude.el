@@ -1,0 +1,48 @@
+* How to reload the package in active Emacs session for testing
+
+  #+begin_src emacs-lisp
+ (defun rude-full-reload ()
+   "Reload `rude' package."
+   (interactive)
+   (when (boundp 'rude-mode)
+     (rude-mode -1))
+
+   (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
+     (push dir load-path))
+
+   (when-let* ((buff (get-buffer "*Customize Group: Compile Plus*")))
+     (kill-buffer buff))
+
+   (let ((all-files (append (directory-files default-directory nil "\\.el$")
+                            '("test/rude-test-helpers.el"))))
+     (dolist (file all-files)
+       (let ((feat (intern (file-name-base file))))
+         (when (featurep feat)
+           (unload-feature feat t)))
+       (load-file file)))
+
+   (rude-mode +1))
+
+ (rude-full-reload)
+  #+end_src
+
+#+begin_src emacs-lisp
+  (require 'rude)
+  (rude-mode +1)
+#+end_src
+#+RESULTS:
+: t
+
+* Future emacs-lisp-mode future history maybe:
+
+  #+begin_src emacs-lisp
+(with-current-buffer (get-buffer "rude-rust-ts-tests.el")
+  (save-excursion
+    (goto-char (pos-eol))
+    (search-backward-regexp "ert-deftest \\([^ ]+\\)")
+    (let ((test-file (file-relative-name buffer-file-name))
+          (test-name (match-string-no-properties 1)))
+      (format "emacs --batch  -L . -l %s --eval '(ert-run-tests-batch-and-exit \"%s\")'"
+              test-file
+              test-name))))
+  #+end_src

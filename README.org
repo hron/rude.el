@@ -1,48 +1,74 @@
-* How to reload the package in active Emacs session for testing
+#+title: rude.el - Run and Debug Seamlessly in Emacs
 
-  #+begin_src emacs-lisp
- (defun rude-full-reload ()
-   "Reload `rude' package."
-   (interactive)
-   (when (boundp 'rude-mode)
-     (rude-mode -1))
+*rude.el* is an Emacs package that enhances your development workflow by providing context-aware commands to run and debug code under the point. The name "rude" is a combination of *RUn* and *DEbug*, reflecting its core purpose.
 
-   (dolist (dir (list default-directory (expand-file-name "test" default-directory)))
-     (push dir load-path))
+It extends the built-in =M-x compile= and the popular debugging framework =dape= to intelligently suggest and execute relevant commands based on the code structure. This allows you to quickly run a single test, a whole test class, a Rust binary, or an example from a Cargo project without leaving your current context.
 
-   (when-let* ((buff (get-buffer "*Customize Group: Compile Plus*")))
-     (kill-buffer buff))
+*Features:*
 
-   (let ((all-files (append (directory-files default-directory nil "\\.el$")
-                            '("test/rude-test-helpers.el"))))
-     (dolist (file all-files)
-       (let ((feat (intern (file-name-base file))))
-         (when (featurep feat)
-           (unload-feature feat t)))
-       (load-file file)))
+- *Context-Aware Execution:* Automatically detects the test method, class, or runnable project under the cursor.
+- *Seamless Debugging:* Integrates with =dape= to start a debugging session for the code under the point with a single command.
+- *Extensible:* While it heavily relies on tree-sitter for accurate code parsing, it can be extended to support modes that do not have tree-sitter support.
 
-   (rude-mode +1))
+* Demo
 
- (rude-full-reload)
-  #+end_src
+** Running a test under the cursor
+#+html: <p align="center">
+https://github.com/user-attachments/assets/8b06a34c-ab78-4f26-a8e0-0b61e12c7f16
+#+html: </p>
+
+** Debugging a test
+#+html: <p align="center">
+https://github.com/user-attachments/assets/0b64210c-68d0-4f1f-8aaf-1c72eb5e7051
+#+html: </p>
+
+* Installation and Usage
+
+You can install =rude.el= from MELPA. Here is an example using =use-package=:
 
 #+begin_src emacs-lisp
-  (require 'rude)
-  (rude-mode +1)
+(use-package rude
+  :ensure t
+  :init (rude-mode))
 #+end_src
-#+RESULTS:
-: t
 
-* Future emacs-lisp-mode future history maybe:
+Once installed and enabled, you can interact with the package as follows:
 
-  #+begin_src emacs-lisp
-(with-current-buffer (get-buffer "rude-rust-ts-tests.el")
-  (save-excursion
-    (goto-char (pos-eol))
-    (search-backward-regexp "ert-deftest \\([^ ]+\\)")
-    (let ((test-file (file-relative-name buffer-file-name))
-          (test-name (match-string-no-properties 1)))
-      (format "emacs --batch  -L . -l %s --eval '(ert-run-tests-batch-and-exit \"%s\")'"
-              test-file
-              test-name))))
-  #+end_src
+*Running Commands with =M-x compile=*
+
+The main interface for running commands is through =M-x compile= (or =M-x project-compile=). With =rude-mode= enabled, =rude.el= populates the "future history" of the compile command.
+
+1.  Place your cursor on a piece of code you want to run (e.g., a test function).
+2.  Invoke =M-x compile=.
+3.  Instead of pressing =M-p= to access past commands, press =M-n= to cycle through the context-aware suggestions provided by =rude.el=.
+4.  Press =RET= to execute the suggested command.
+
+*Debugging with =dape=*
+
+For debugging, =rude.el= integrates with the =dape= package. It automatically sets the =dape-command= variable based on the code under the cursor, if it's not already set.
+
+1.  Place your cursor on a piece of code you want to debug.
+2.  Invoke =M-x dape=.
+3.  The command prompt will be pre-filled with the appropriate debug command.
+4.  Press =RET= to start the debug session.
+
+* Supported Languages
+
+#+html: <div align="center">
+| Language | Supported Runners | Debugging with =dape= |
+|----------+-------------------+-----------------------|
+| Python   | pytest, unittest  | Yes                   |
+| Rust     | Cargo             | Yes                   |
+#+html: </div>
+
+* Alternatives
+
+There are several other packages that provide similar functionality:
+
+- *vim-test*: A popular Vim plugin that provides a similar "run test under cursor" feature. =rude.el= provides a similar experience in Emacs.
+- *quickrun.el*: A generic runner for executing code snippets, but it is not as context-aware as =rude.el= for running tests or specific project targets.
+- *Language-specific packages*: Many language-specific packages (e.g., =python.el=, =rust-mode=) have their own functions for running tests. =rude.el= aims to provide a unified and consistent interface across different languages.
+
+* Technical Details
+
+=rude.el= uses =tree-sitter= to parse the source code and identify the relevant code constructs (e.g., functions, classes, modules). This allows for a high degree of accuracy in its suggestions. The architecture is designed to be extensible, so support for new languages or runners can be added easily. In principle, it could be extended to support non tree-sitter enabled modes by using other parsing techniques.
