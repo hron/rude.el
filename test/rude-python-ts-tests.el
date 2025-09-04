@@ -146,3 +146,19 @@
                      '(debugpy-module command "python3"
                                       :module "pytest"
                                       :args "test_pytest.py -k test_function"))))))
+
+(ert-deftest python-ts-integration ()
+  (let ((rude-python-ts-test-runner "unittest"))
+    (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
+      (rude-mode +1)
+      (search-forward "def test_upper")
+      (cl-letf (((symbol-function 'read-shell-command)
+                 (lambda (prompt &optional initial-contents hist &rest args)
+                   (caar args))))
+        (funcall-interactively #'project-compile))
+      (with-current-buffer "*compilation*"
+        (should-eventually
+         (let ((buffer-text
+                (buffer-substring-no-properties (point-min) (point-max))))
+           (and (string-match-p "Ran 1 test" buffer-text)
+                (string-match-p "TestStringMethods.test_upper" buffer-text))))))))
