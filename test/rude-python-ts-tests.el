@@ -56,13 +56,13 @@
       (search-forward "def test_upper")
       (should
        (equal (rude-python-ts-test-method)
-              "python3 -m unittest test_unittest.py -k 'TestStringMethods.test_upper'"))
+              "python3 -m unittest test_unittest.py -k \"TestStringMethods.test_upper\""))
       (should
        (equal (rude-python-ts-test-method t)
               '(debugpy-module
                 command "python3"
                 :module "unittest"
-                :args "test_unittest.py -k 'TestStringMethods.test_upper'"))))))
+                :args "test_unittest.py -k \"TestStringMethods.test_upper\""))))))
 
 (ert-deftest python-ts-unittest-method-with-point-at-beginning-of-the-line ()
   (let ((rude-python-ts-test-runner "unittest"))
@@ -71,7 +71,7 @@
       (beginning-of-line)
       (should
        (equal (rude-python-ts-test-method)
-              "python3 -m unittest test_unittest.py -k 'TestStringMethods.test_upper'")))))
+              "python3 -m unittest test_unittest.py -k \"TestStringMethods.test_upper\"")))))
 
 (ert-deftest python-ts-unittest-file-with-pytest ()
   (let ((rude-python-ts-test-runner "pytest"))
@@ -108,11 +108,11 @@
     (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
       (search-forward "def test_upper")
       (should (equal (rude-python-ts-test-method)
-                     "python3 -m pytest test_unittest.py -k 'TestStringMethods and test_upper'"))
+                     "python3 -m pytest test_unittest.py -k \"TestStringMethods and test_upper\""))
       (should (equal (rude-python-ts-test-method t)
                      '(debugpy-module command "python3"
                                       :module "pytest"
-                                      :args "test_unittest.py -k 'TestStringMethods and test_upper'"))))))
+                                      :args "test_unittest.py -k \"TestStringMethods and test_upper\""))))))
 
 (ert-deftest python-ts-pytest-file ()
   (let ((rude-python-ts-test-runner "pytest"))
