@@ -162,3 +162,20 @@
                 (buffer-substring-no-properties (point-min) (point-max))))
            (and (string-match-p "Ran 1 test" buffer-text)
                 (string-match-p "TestStringMethods.test_upper" buffer-text))))))))
+
+(ert-deftest python-ts-integration-dape ()
+  (let ((rude-python-ts-test-runner "unittest"))
+    (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
+      (rude-mode +1)
+      (search-forward "def test_upper")
+      (cl-letf (((symbol-function 'read-from-minibuffer)
+                 (lambda (prompt &optional initial-contents &rest args)
+                   initial-contents)))
+        (call-interactively #'dape))
+
+      (should-eventually
+       (when-let* ((dape-shell (get-buffer "*dape-shell*")))
+         (with-current-buffer dape-shell
+           (let ((buffer-text
+                  (buffer-substring-no-properties (point-min) (point-max))))
+             (string-match-p "Ran 1 test" buffer-text))))))))
