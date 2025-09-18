@@ -21,7 +21,7 @@
           { emacs }:
           pkgs.mkShell {
             name = "emacs-${emacs.version}";
-            packages = [ emacs ] ++ [ pkgs.eask-cli ];
+            packages = [ emacs ] ++ [ pkgs.eask-cli pkgs.python313Packages.debugpy ];
 
             shellHook = ''
               export PATH=${emacs}/bin:$PATH
