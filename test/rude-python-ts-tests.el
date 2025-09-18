@@ -155,7 +155,7 @@
       (cl-letf (((symbol-function 'read-shell-command)
                  (lambda (prompt &optional initial-contents hist &rest args)
                    (caar args))))
-        (funcall-interactively #'project-compile))
+        (call-interactively #'compile))
       (with-current-buffer "*compilation*"
         (should-eventually
          (let ((buffer-text
