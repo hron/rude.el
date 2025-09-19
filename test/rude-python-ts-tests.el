@@ -178,4 +178,7 @@
          (with-current-buffer dape-shell
            (let ((buffer-text
                   (buffer-substring-no-properties (point-min) (point-max))))
-             (string-match-p "Ran 1 test" buffer-text))))))))
+             (string-match-p "Ran 1 test" buffer-text)))))
+
+      (let ((kill-buffer-query-functions '()))
+        (dape-quit)))))
