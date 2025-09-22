@@ -56,13 +56,13 @@
       (search-forward "def test_upper")
       (should
        (equal (rude-python-ts-test-method)
-              "python3 -m unittest test_unittest.py -k 'TestStringMethods.test_upper'"))
+              "python3 -m unittest test_unittest.py -k \"TestStringMethods.test_upper\""))
       (should
        (equal (rude-python-ts-test-method t)
               '(debugpy-module
                 command "python3"
                 :module "unittest"
-                :args "test_unittest.py -k 'TestStringMethods.test_upper'"))))))
+                :args "test_unittest.py -k \"TestStringMethods.test_upper\""))))))
 
 (ert-deftest python-ts-unittest-method-with-point-at-beginning-of-the-line ()
   (let ((rude-python-ts-test-runner "unittest"))
@@ -71,7 +71,7 @@
       (beginning-of-line)
       (should
        (equal (rude-python-ts-test-method)
-              "python3 -m unittest test_unittest.py -k 'TestStringMethods.test_upper'")))))
+              "python3 -m unittest test_unittest.py -k \"TestStringMethods.test_upper\"")))))
 
 (ert-deftest python-ts-unittest-file-with-pytest ()
   (let ((rude-python-ts-test-runner "pytest"))
@@ -108,11 +108,11 @@
     (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
       (search-forward "def test_upper")
       (should (equal (rude-python-ts-test-method)
-                     "python3 -m pytest test_unittest.py -k 'TestStringMethods and test_upper'"))
+                     "python3 -m pytest test_unittest.py -k \"TestStringMethods and test_upper\""))
       (should (equal (rude-python-ts-test-method t)
                      '(debugpy-module command "python3"
                                       :module "pytest"
-                                      :args "test_unittest.py -k 'TestStringMethods and test_upper'"))))))
+                                      :args "test_unittest.py -k \"TestStringMethods and test_upper\""))))))
 
 (ert-deftest python-ts-pytest-file ()
   (let ((rude-python-ts-test-runner "pytest"))
@@ -146,3 +146,41 @@
                      '(debugpy-module command "python3"
                                       :module "pytest"
                                       :args "test_pytest.py -k test_function"))))))
+
+(ert-deftest python-ts-integration ()
+  (let ((rude-python-ts-test-runner "unittest"))
+    (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
+      (rude-mode +1)
+      (search-forward "def test_upper")
+      (cl-letf (((symbol-function 'read-shell-command)
+                 (lambda (prompt &optional initial-contents hist &rest args)
+                   (caar args))))
+        (call-interactively #'compile))
+      (with-current-buffer "*compilation*"
+        (should-eventually
+         (let ((buffer-text
+                (buffer-substring-no-properties (point-min) (point-max))))
+           (and (string-match-p "Ran 1 test" buffer-text)
+                (string-match-p "TestStringMethods.test_upper" buffer-text))))))))
+
+(ert-deftest python-ts-integration-dape ()
+  (when (memq system-type '(windows-nt))
+    (ert-skip "Skipped on Windows"))
+  (let ((rude-python-ts-test-runner "unittest"))
+    (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
+      (rude-mode +1)
+      (search-forward "def test_upper")
+      (cl-letf (((symbol-function 'read-from-minibuffer)
+                 (lambda (prompt &optional initial-contents &rest args)
+                   initial-contents)))
+        (call-interactively #'dape))
+
+      (should-eventually
+       (when-let* ((dape-shell (get-buffer "*dape-shell*")))
+         (with-current-buffer dape-shell
+           (let ((buffer-text
+                  (buffer-substring-no-properties (point-min) (point-max))))
+             (string-match-p "Ran 1 test" buffer-text)))))
+
+      (let ((kill-buffer-query-functions '()))
+        (dape-quit)))))

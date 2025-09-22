@@ -33,3 +33,17 @@ Use MODE as major mode."
          (funcall ,mode)
          (progn ,@body)
          (kill-buffer buffer)))))
+
+(defmacro should-eventually (pred &optional seconds)
+  "PRED should eventually be non nil during duration SECONDS.
+If PRED does not eventually return nil, abort the current test as
+failed."
+  (let ((seconds (or seconds 10)))
+    `(progn
+       (with-timeout (,seconds)
+         (while (not ,pred)
+           (accept-process-output nil 0.01)))
+       (should ,pred)
+       (let ((ret ,pred))
+         (ignore ret)
+         ret))))

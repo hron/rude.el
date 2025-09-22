@@ -154,7 +154,7 @@ If DEBUG is set to t return a `dape' config instead."
               (class-name (treesit-node-text (alist-get 'class-name captures) t))
               (test-file (file-relative-name buffer-file-name default-directory))
               (delimiter (if (equal "pytest" test-runner) " and " "."))
-              (runner-args (format "%s -k '%s%s%s'" test-file
+              (runner-args (format "%s -k \"%s%s%s\"" test-file
                                    class-name
                                    delimiter
                                    method-name)))
