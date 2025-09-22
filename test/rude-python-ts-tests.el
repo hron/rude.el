@@ -164,6 +164,8 @@
                 (string-match-p "TestStringMethods.test_upper" buffer-text))))))))
 
 (ert-deftest python-ts-integration-dape ()
+  (when (memq system-type '(windows-nt))
+    (ert-skip "Skipped on Windows"))
   (let ((rude-python-ts-test-runner "unittest"))
     (with-sample-file "python-ts/test_unittest.py" #'python-ts-mode
       (rude-mode +1)
